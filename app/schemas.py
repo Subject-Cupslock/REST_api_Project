@@ -1,6 +1,9 @@
 ## схемы Pydantic
 
 from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from typing import Optional
+
 
 class UserCreate(BaseModel):
     username: str
@@ -27,4 +30,22 @@ class Token(BaseModel):
     token_tupe: str
 
 
-    
+##Item schemas
+class ItemBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+
+class ItemCreate(ItemBase):
+    pass
+
+class ItemUpdate(ItemBase):
+    pass
+
+class ItemResponse(ItemBase):
+    id: int
+    owner_id: int
+    create_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
