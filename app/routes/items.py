@@ -4,6 +4,7 @@ from typing import List
 from app import models, schemas
 from app.database import get_db
 from app.oauth2 import get_current_user
+from app.exceptions import ItemNotFoundException
 
 router = APIRouter(
     prefix = '/items',
@@ -26,14 +27,14 @@ def get_items(db: Session = Depends(get_db), current_user: models.User = Depends
 def get_item(id:int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     item = db.query(models.Item).filter(models.Item.id == id, models.Item.owner_id==current_user.id).first()
     if not item:
-        raise HTTPException(status_code = 404, detail = 'Item not found')
+        raise ItemNotFoundException(item_id=id)
     return item
 
 @router.put("/{id}", response_model = schemas.ItemResponse)
 def update_item(id:int,update_item: schemas.ItemUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     item = db.query(models.Item).filter(models.Item.id == id, models.Item.owner_id==current_user.id).first()
     if not item:
-        raise HTTPException(status_code = 404, detail = 'Item not found')
+        raise ItemNotFoundException(item_id=id)
     for key, value in update_item.dict(exclude_unset=True).items():
         setattr(item, key, value)
     db.commit()
@@ -44,7 +45,7 @@ def update_item(id:int,update_item: schemas.ItemUpdate, db: Session = Depends(ge
 def delete_item(id:int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     item = db.query(models.Item).filter(models.Item.id == id, models.Item.owner_id==current_user.id).first()
     if not item:
-        raise HTTPException(status_code = 404, detail = 'Item not found')
+        raise ItemNotFoundException(item_id=id)
     db.delete(item)
     db.commit()
     return None
